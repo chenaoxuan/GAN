@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.utils import make_grid
 from tqdm.notebook import tqdm
+import matplotlib.pyplot as plt
 
 num_epochs = 10
 n_critic = 5
