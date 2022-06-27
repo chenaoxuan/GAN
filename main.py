@@ -1,6 +1,3 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 from PIL import Image
@@ -8,12 +5,12 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.utils import make_grid
-from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-num_epochs = 10
-n_critic = 5
-display_step = 300
+EPOCH = 10
+BATCH_SIZE = 128
 
 
 class FashionMNIST(Dataset):
@@ -21,7 +18,6 @@ class FashionMNIST(Dataset):
         self.transform = transform
         fashion_df = pd.read_csv('./data/'
                                  'fashion-mnist_train.csv')
-        print(fashion_df.shape)
         self.labels = fashion_df.label.values
         self.images = fashion_df.iloc[:, 1:].values.astype('uint8').reshape(-1, 28, 28)
 
@@ -41,7 +37,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=(0.5,), std=(0.5,))
 ])
 dataset = FashionMNIST(transform=transform)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 
 class Discriminator(nn.Module):
@@ -134,9 +130,9 @@ def discriminator_train_step(batch_size, discriminator, generator, d_optimizer, 
 d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
 g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
 
-for epoch in range(num_epochs):
+for epoch in range(EPOCH):
     print('Starting epoch {}...'.format(epoch))
-    for i, (images, labels) in enumerate(tqdm(data_loader)):
+    for i, (images, labels) in enumerate(data_loader):
         real_images = Variable(images).cuda()
         labels = Variable(labels).cuda()
         generator.train()
