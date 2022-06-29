@@ -149,21 +149,38 @@ def train(epoch, criterion, d_optimizer, data_loader, discriminator, g_optimizer
 
 def main():
     parser = argparse.ArgumentParser(description='Fashion GAN')
+    parser.add_argument(
+        "--config-file",
+        default="configs/baseline.yaml",
+        metavar="FILE",
+        help="path to config file",
+        type=str
+    )
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+    args = parser.parse_args()
+    print(args)
+    for arg in vars(args):
+        print(arg, ":", getattr(args, arg))
 
-    EPOCH = 10
-    BATCH_SIZE = 128
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.5,), std=(0.5,))
-    ])
-    dataset = FashionMNIST(transform=transform)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
-    generator = Generator().cuda()
-    discriminator = Discriminator().cuda()
-    criterion = nn.BCELoss()
-    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
-    g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
-    train(EPOCH, criterion, d_optimizer, data_loader, discriminator, g_optimizer, generator)
+    # EPOCH = 10
+    # BATCH_SIZE = 128
+    # transform = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=(0.5,), std=(0.5,))
+    # ])
+    # dataset = FashionMNIST(transform=transform)
+    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+    # generator = Generator().cuda()
+    # discriminator = Discriminator().cuda()
+    # criterion = nn.BCELoss()
+    # d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
+    # g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
+    # train(EPOCH, criterion, d_optimizer, data_loader, discriminator, g_optimizer, generator)
 
 
 if __name__ == '__main__':
