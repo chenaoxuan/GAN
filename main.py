@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import argparse
 from PIL import Image
 from torch.autograd import Variable
 from torch.utils.data import Dataset
@@ -8,9 +9,6 @@ from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-EPOCH = 10
-BATCH_SIZE = 128
 
 
 class FashionMNIST(Dataset):
@@ -30,14 +28,6 @@ class FashionMNIST(Dataset):
         if self.transform:
             img = self.transform(img)
         return img, label
-
-
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=(0.5,), std=(0.5,))
-])
-dataset = FashionMNIST(transform=transform)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 
 class Discriminator(nn.Module):
@@ -89,12 +79,6 @@ class Generator(nn.Module):
         return out.view(x.size(0), 28, 28)
 
 
-generator = Generator().cuda()
-discriminator = Discriminator().cuda()
-
-criterion = nn.BCELoss()
-
-
 def generator_train_step(batch_size, discriminator, generator, g_optimizer, criterion):
     g_optimizer.zero_grad()
     z = Variable(torch.randn(batch_size, 100)).cuda()
@@ -127,39 +111,60 @@ def discriminator_train_step(batch_size, discriminator, generator, d_optimizer, 
     return d_loss.item()
 
 
-d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
-g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
+def train(epoch, criterion, d_optimizer, data_loader, discriminator, g_optimizer, generator):
+    for epoch in range(epoch):
+        print(f'Starting epoch {epoch}')
+        for i, (images, labels) in enumerate(data_loader):
+            real_images = Variable(images).cuda()
+            labels = Variable(labels).cuda()
+            generator.train()
+            batch_size = real_images.size(0)
+            d_loss = discriminator_train_step(len(real_images), discriminator,
+                                              generator, d_optimizer, criterion,
+                                              real_images, labels)
 
-for epoch in range(EPOCH):
-    print('Starting epoch {}...'.format(epoch))
-    for i, (images, labels) in enumerate(data_loader):
-        real_images = Variable(images).cuda()
-        labels = Variable(labels).cuda()
-        generator.train()
-        batch_size = real_images.size(0)
-        d_loss = discriminator_train_step(len(real_images), discriminator,
-                                          generator, d_optimizer, criterion,
-                                          real_images, labels)
+            g_loss = generator_train_step(batch_size, discriminator, generator, g_optimizer, criterion)
 
-        g_loss = generator_train_step(batch_size, discriminator, generator, g_optimizer, criterion)
-
-    generator.eval()
-    print('g_loss: {}, d_loss: {}'.format(g_loss, d_loss))
-    z = Variable(torch.randn(9, 100)).cuda()
-    labels = Variable(torch.LongTensor(np.arange(9))).cuda()
+        generator.eval()
+        print('g_loss: {}, d_loss: {}'.format(g_loss, d_loss))
+        z = Variable(torch.randn(9, 100)).cuda()
+        labels = Variable(torch.LongTensor(np.arange(9))).cuda()
+        sample_images = generator(z, labels).unsqueeze(1).data.cpu()
+        grid = make_grid(sample_images, nrow=3, normalize=True).permute(1, 2, 0).numpy()
+        plt.imshow(grid)
+        plt.show()
+    z = Variable(torch.randn(100, 100)).cuda()
+    labels = Variable(torch.LongTensor([i for _ in range(10) for i in range(10)])).cuda()
     sample_images = generator(z, labels).unsqueeze(1).data.cpu()
-    grid = make_grid(sample_images, nrow=3, normalize=True).permute(1, 2, 0).numpy()
-    plt.imshow(grid)
+    grid = make_grid(sample_images, nrow=10, normalize=True).permute(1, 2, 0).numpy()
+    fig, ax = plt.subplots(figsize=(15, 15))
+    ax.imshow(grid)
+    _ = plt.yticks([])
+    _ = plt.xticks(np.arange(15, 300, 30),
+                   ['T-Shirt', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag',
+                    'Ankle boot'],
+                   rotation=45, fontsize=20)
     plt.show()
 
-z = Variable(torch.randn(100, 100)).cuda()
-labels = Variable(torch.LongTensor([i for _ in range(10) for i in range(10)])).cuda()
-sample_images = generator(z, labels).unsqueeze(1).data.cpu()
-grid = make_grid(sample_images, nrow=10, normalize=True).permute(1, 2, 0).numpy()
-fig, ax = plt.subplots(figsize=(15, 15))
-ax.imshow(grid)
-_ = plt.yticks([])
-_ = plt.xticks(np.arange(15, 300, 30),
-               ['T-Shirt', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot'],
-               rotation=45, fontsize=20)
-plt.show()
+
+def main():
+    parser = argparse.ArgumentParser(description='Fashion GAN')
+
+    EPOCH = 10
+    BATCH_SIZE = 128
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5,), std=(0.5,))
+    ])
+    dataset = FashionMNIST(transform=transform)
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+    generator = Generator().cuda()
+    discriminator = Discriminator().cuda()
+    criterion = nn.BCELoss()
+    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
+    g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
+    train(EPOCH, criterion, d_optimizer, data_loader, discriminator, g_optimizer, generator)
+
+
+if __name__ == '__main__':
+    main()
