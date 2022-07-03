@@ -52,3 +52,9 @@ _C.SOLVER.GENERATOR.LR = 1e-4
 _C.SOLVER.DISCRIMINATOR = CN()
 _C.SOLVER.DISCRIMINATOR.OPTIM = 'Adam'
 _C.SOLVER.DISCRIMINATOR.LR = 1e-4
+
+# ------------------------------------------------------------
+# Output
+# ------------------------------------------------------------
+_C.OUTPUT_DIR = "."
+
