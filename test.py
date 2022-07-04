@@ -5,15 +5,15 @@ Project: GAN
 Time:    2022/7/3
 Des:     
 """
-import os
-import os.path as osp
+import time
+
+from GAN.utils.metric_logger import MetricLogger
 
 
-def mkdir_or_exist(dir_name, mode=0o777):
-    if dir_name == '':
-        return
-    dir_name = osp.expanduser(dir_name)
-    os.makedirs(dir_name, mode=mode, exist_ok=True)
-
-
-mkdir_or_exist('outputs')
+mlogger = MetricLogger()
+mlogger.update(a=1)
+print(str(mlogger))
+mlogger.update(a=2)
+print(str(mlogger))
+mlogger.update(a=3)
+print(str(mlogger))

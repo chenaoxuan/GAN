@@ -68,7 +68,7 @@ def get_logger(name, log_dir=None, log_name="log.txt", log_level=logging.INFO):
         handlers.append(file_handler)
 
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S")
     for handler in handlers:
         handler.setFormatter(formatter)
         handler.setLevel(log_level)
