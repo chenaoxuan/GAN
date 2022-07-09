@@ -10,11 +10,16 @@ class SmoothedValue(object):
     window or the global series average.
     """
 
-    def __init__(self, window_size=20):
+    def __init__(self, window_size=20, fmt=None, avg_only=False):
+        if fmt is None:
+            fmt = "(med:{median:.4f}; avg:{global_avg:.4f})"
+        if avg_only:
+            fmt = "{global_avg:.4f}"
         self.deque = deque(maxlen=window_size)
         self.series = []
         self.total = 0.0
         self.count = 0
+        self.fmt = fmt
 
     def update(self, value):
         self.deque.append(value)
@@ -36,6 +41,22 @@ class SmoothedValue(object):
     def global_avg(self):
         return self.total / self.count
 
+    @property
+    def max(self):
+        return max(self.deque)
+
+    @property
+    def value(self):
+        return self.deque[-1]
+
+    def __str__(self):
+        return self.fmt.format(
+            median=self.median,
+            avg=self.avg,
+            global_avg=self.global_avg,
+            max=self.max,
+            value=self.value)
+
 
 class MetricLogger(object):
     def __init__(self, delimiter="\t"):
@@ -49,7 +70,11 @@ class MetricLogger(object):
             assert isinstance(v, (float, int))
             self.meters[k].update(v)
 
+    def add_meter(self, name, meter):
+        self.meters[name] = meter
+
     def __getattr__(self, attr):
+
         if attr in self.meters:
             return self.meters[attr]
         if attr in self.__dict__:
@@ -61,6 +86,6 @@ class MetricLogger(object):
         loss_str = []
         for name, meter in self.meters.items():
             loss_str.append(
-                f"{name}: (avg={meter.global_avg:.4f} med={meter.median:.4f})"
+                "{}: {}".format(name, str(meter))
             )
         return self.delimiter.join(loss_str)
