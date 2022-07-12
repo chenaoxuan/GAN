@@ -10,6 +10,7 @@ from yacs.config import CfgNode as CN
 _C = CN()
 
 _C.MODEL = CN()
+_C.MODEL.PARAMETER = ""
 _C.MODEL.DEVICE = "cuda"
 
 # ------------------------------------------------------------
@@ -45,6 +46,7 @@ _C.MODEL.DISCRIMINATOR.LABEL_EMB = 10
 # ------------------------------------------------------------
 _C.SOLVER = CN()
 _C.SOLVER.MAX_EPOCH = 5
+_C.SOLVER.SAVE_EPOCH = 1
 _C.SOLVER.LOSS = 'BCELoss'
 _C.SOLVER.GENERATOR = CN()
 _C.SOLVER.GENERATOR.OPTIM = 'Adam'
@@ -57,4 +59,3 @@ _C.SOLVER.DISCRIMINATOR.LR = 1e-4
 # Output
 # ------------------------------------------------------------
 _C.OUTPUT_DIR = "."
-

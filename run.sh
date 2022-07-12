@@ -4,4 +4,5 @@ config_file=configs/baseline.yaml
 
 #python -m train --config-file $config_file OUTPUT_DIR $output_dir
 #python -m train  OUTPUT_DIR $output_dir
-python -m train --config-file $config_file
+#python -m train --config-file $config_file
+python -m test --config-file $config_file

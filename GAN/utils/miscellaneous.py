@@ -20,3 +20,4 @@ def save_config(config, save_path):
     if is_main_process():
         with open(save_path, 'w', encoding='GBK') as f:
             f.write(config.__str__())
+

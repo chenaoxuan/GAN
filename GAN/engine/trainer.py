@@ -59,7 +59,18 @@ def discriminator_train_step(config, discriminator, generator, d_optimizer, crit
     return d_loss.item()
 
 
-def train_one_epoch(now_epoch, config, dataloader, generator, g_optim, discriminator, d_optim, criterion):
+def train_one_epoch(
+        now_epoch,
+        config,
+        dataloader,
+        generator,
+        g_optim,
+        discriminator,
+        d_optim,
+        criterion,
+        checkpointer,
+        arguments
+):
     mlogger = MetricLogger()
     device = config.MODEL.DEVICE
     logger = get_logger("GAN.trainer")
@@ -87,6 +98,7 @@ def train_one_epoch(now_epoch, config, dataloader, generator, g_optim, discrimin
             g_optimizer=g_optim,
             criterion=criterion,
         )
+
         mlogger.update(d_loss=d_loss, g_loss=g_loss, batch_time=time.time() - end)
         end = time.time()
         ets_seconds = mlogger.batch_time.global_avg * (
@@ -105,3 +117,8 @@ def train_one_epoch(now_epoch, config, dataloader, generator, g_optim, discrimin
                 log_msg.append(f"memory: {torch.cuda.max_memory_allocated() / 1024.0 / 1024.0:.0f}MB")
             logger.info(mlogger.delimiter.join(log_msg))
     generator.eval()
+    loss = mlogger.d_loss.global_avg
+    if loss > arguments['best_loss']:
+        arguments['best_loss'] = loss
+        arguments['best_epoch'] = now_epoch
+        checkpointer.save(name=f'GAN_{now_epoch}e_better', **arguments)
